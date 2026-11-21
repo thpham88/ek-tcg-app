@@ -1440,17 +1440,78 @@
             '<div><label>Listing price</label><b>' + money(item.list) + "</b></div>" +
             margin +
           "</div>" +
+          '<div class="cl-result" id="cl-' + cat + "-" + item.id + '"></div>' +
           '<div class="item-actions">' +
+            '<button class="btn small" type="button" data-cl="' + cat + ":" + item.id + '">Card Ladder</button>' +
             '<a class="sold-link" href="' + soldUrl(item, cat) + '" target="_blank" rel="noopener">Sold listings ↗</a>' +
             '<button class="btn small" type="button" data-edit="' + cat + ":" + item.id + '">Edit</button>' +
             '<button class="btn small danger" type="button" data-del="' + cat + ":" + item.id + '">Remove</button>' +
           "</div></article>";
+      }
+      /* ---------------- Card Ladder lookup (via bridge) ---------------- */
+      function clCategory(game) {
+        if (!game) return "";
+        var g = String(game).toLowerCase();
+        if (g.indexOf("one piece") >= 0 || g.indexOf("onepiece") >= 0) return "OnePiece";
+        if (g.indexOf("pok") >= 0) return "Pokemon";
+        if (g.indexOf("magic") >= 0) return "Magic";
+        if (g.indexOf("yu-gi") >= 0 || g.indexOf("yugioh") >= 0) return "YuGiOh";
+        if (g.indexOf("naruto") >= 0) return "Naruto";
+        return "";
+      }
+      function clAttempts(item) {
+        var clean = String(item.name || "").replace(/\b(19|20)\d{2}\b/g, " ").replace(/[^A-Za-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+        var toks = clean.split(" ").filter(function (w) { return w.length > 1; });
+        var out = [];
+        function push(q) { q = (q || "").trim(); if (q && out.indexOf(q) < 0) out.push(q); }
+        push(clean);
+        if (toks.length > 2) push(toks[0] + " " + toks[toks.length - 1]);
+        if (toks.length > 1) push(toks[0]);
+        return out.slice(0, 3);
+      }
+      function clDate(s) {
+        if (!s) return "";
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      }
+      function clFetch(item, cat, attemptIdx, host) {
+        var attempts = clAttempts(item);
+        if (attemptIdx >= attempts.length) { host.innerHTML = '<span class="item-meta">No match on Card Ladder.</span>'; return; }
+        var cond = "";
+        if (cat === "slabs") cond = (item.grader || "PSA") + " " + (item.grade || "");
+        else if (cat === "raw") cond = "Raw";
+        var url = BRIDGE_URL + "?key=" + encodeURIComponent(BRIDGE_KEY) + "&action=comp" +
+          "&query=" + encodeURIComponent(attempts[attemptIdx]) +
+          "&category=" + encodeURIComponent(clCategory(item.game)) +
+          "&condition=" + encodeURIComponent(cond);
+        fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+          var rows = (data && data.results) || [];
+          if (!rows.length) { clFetch(item, cat, attemptIdx + 1, host); return; }
+          var html = rows.slice(0, 3).map(function (r) {
+            return '<div style="margin-top:6px;"><b>CL ' + money(r.cl_value) + "</b>" +
+              (r.last_sold_price ? ' <span class="item-meta">Last sold ' + money(r.last_sold_price) + (r.last_sold_date ? " · " + clDate(r.last_sold_date) : "") + "</span>" : "") +
+              '<div class="item-meta">' + esc(r.label || "") + "</div></div>";
+          }).join("");
+          host.innerHTML = html;
+        }).catch(function () { host.innerHTML = '<span class="item-meta">Card Ladder check failed — try again.</span>'; });
       }
       function bindItemButtons(root) {
         $$("[data-edit]", root).forEach(function (b) {
           b.addEventListener("click", function () {
             var parts = b.getAttribute("data-edit").split(":");
             openItemForm(parts[0], parseInt(parts[1], 10));
+          });
+        });
+        $$("[data-cl]", root).forEach(function (b) {
+          b.addEventListener("click", function () {
+            var parts = b.getAttribute("data-cl").split(":");
+            var cat = parts[0], id = parseInt(parts[1], 10);
+            var it = state[cat].filter(function (x) { return x.id === id; })[0];
+            var host = document.getElementById("cl-" + cat + "-" + id);
+            if (!it || !host) return;
+            host.innerHTML = '<span class="item-meta">Checking Card Ladder…</span>';
+            clFetch(it, cat, 0, host);
           });
         });
         $$("[data-del]", root).forEach(function (b) {
