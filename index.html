@@ -1521,47 +1521,108 @@
         }
         return "";
       }
+      function certInfo(d) {
+        var c = (d && d.cert) || {};
+        var grade = "";
+        if (c.grade !== undefined && c.grade !== null && c.grade !== "") grade = String(c.grade);
+        else { var cg = digKey(d || {}, ["grade"]); if (cg !== "") grade = String(cg).replace(/^g/i, ""); }
+        var parts = [];
+        if (c.year) parts.push(c.year);
+        if (c.set || c.brand) parts.push(c.set || c.brand);
+        if (c.subject) parts.push(c.subject);
+        if (c.card_number) parts.push("#" + c.card_number);
+        if (c.variety) parts.push(c.variety);
+        var built = parts.join(" ").trim();
+        var label = String(digKey(d || {}, ["label", "name", "description", "card_name", "player"]) || built);
+        return {
+          label: label, subject: c.subject || "", setName: c.set || c.brand || "", num: c.card_number || "",
+          grade: grade, gradeLabel: c.psa_grade_label || (grade ? "PSA " + grade : ""),
+          clv: digKey(d || {}, ["cl_value"]), lsp: digKey(d || {}, ["last_sold_price"]),
+          lsd: digKey(d || {}, ["last_sold_date"]), pop: digKey(d || {}, ["pop", "population"])
+        };
+      }
+
+      function renderCertResult(host, info, cert, valueHtml) {
+        if (!valueHtml) {
+          valueHtml = '<div style="margin-top:6px;"><b>CL ' + money(info.clv === "" ? null : info.clv) + "</b>" +
+            (info.lsp !== "" ? ' <span class="item-meta">Last sold ' + money(info.lsp) + (info.lsd ? " · " + clDate(info.lsd) : "") + "</span>" : "") +
+            (info.pop !== "" ? ' <span class="item-meta">· Pop ' + esc(String(info.pop)) + "</span>" : "") + "</div>";
+        }
+        host.innerHTML =
+          '<div style="border-top:1px solid #e3e9f0; padding-top:12px;">' +
+          (info.label ? '<div style="font-weight:600;">' + esc(info.label) + "</div>" : "") +
+          '<div class="item-meta" style="margin-top:2px;">' + esc(info.gradeLabel || "") + " · Cert " + esc(cert) + "</div>" +
+          valueHtml +
+          '<button class="btn primary" id="btnCertAdd" type="button" style="margin-top:10px;">Add to Slabs</button></div>';
+        var addBtn = document.getElementById("btnCertAdd");
+        if (addBtn) addBtn.addEventListener("click", function () {
+          openItemForm("slabs", null);
+          $("#fName").value = info.label.replace(/\s+(PSA|BGS|SGC|CGC)\s+[\d.]+.*$/i, "").trim() || info.label;
+          if (info.setName) $("#fSet").value = info.setName;
+          if (info.grade) $("#fGrade").value = info.grade;
+          $("#fCert").value = cert;
+          if (/pok[e\u00e9]mon/i.test(info.label)) $("#fGame").value = "Pok\u00e9mon";
+          else if (/one piece/i.test(info.label)) $("#fGame").value = "One Piece";
+        });
+      }
+
+      function certValueFallback(host, info, cert) {
+        var cat = /pok[e\u00e9]mon/i.test(info.label) ? "Pokemon" : "OnePiece";
+        var cond = info.grade ? ("PSA " + info.grade) : "";
+        var queries = [];
+        if (info.subject && info.setName) queries.push(info.subject + " " + info.setName);
+        if (info.subject) queries.push(info.subject);
+        var i = 0;
+        function next() {
+          if (i >= queries.length) {
+            renderCertResult(host, info, cert, '<p class="item-meta" style="margin-top:6px;">Card Ladder doesn\'t track a value for this card yet. You can still add it and set your own price.</p>');
+            return;
+          }
+          var q = queries[i++];
+          var url = BRIDGE_URL + "?key=" + encodeURIComponent(BRIDGE_KEY) + "&action=comp&query=" + encodeURIComponent(q) + "&category=" + encodeURIComponent(cat) + (cond ? "&condition=" + encodeURIComponent(cond) : "");
+          fetch(url).then(function (r) { return r.json(); }).then(function (res) {
+            var rows = (res && res.results) || [];
+            var row = null;
+            if (rows.length) {
+              var setWords = info.setName.toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 3; });
+              var best = -1;
+              rows.forEach(function (r) {
+                var lab = String(r.label || "").toLowerCase();
+                var score = 0;
+                setWords.forEach(function (w) { if (lab.indexOf(w) >= 0) score++; });
+                if (info.num && lab.indexOf("#" + info.num.toLowerCase()) >= 0) score += 3;
+                if (score > best) { best = score; row = r; }
+              });
+              if (info.setName && best <= 0) row = null;
+            }
+            if (row) {
+              var vh = '<div style="margin-top:6px;"><b>CL ' + money(row.cl_value === undefined ? null : row.cl_value) + "</b>" +
+                (row.last_sold_price !== undefined ? ' <span class="item-meta">Last sold ' + money(row.last_sold_price) + (row.last_sold_date ? " · " + clDate(row.last_sold_date) : "") + "</span>" : "") +
+                '<div class="item-meta">' + esc(row.label || "") + "</div></div>";
+              renderCertResult(host, info, cert, vh);
+            } else next();
+          }).catch(function () { next(); });
+        }
+        host.innerHTML = '<p class="item-meta">Found it — now checking its Card Ladder value…</p>';
+        next();
+      }
+
       function doCertLookup() {
         var cert = ($("#certInput").value || "").replace(/[^0-9]/g, "");
         var host = $("#certResult");
         if (!cert) { host.innerHTML = '<span class="item-meta">Enter the cert number from the slab label first.</span>'; return; }
-        host.innerHTML = '<span class="item-meta">Checking Card Ladder…</span>';
+        host.innerHTML = '<span class="item-meta">Checking Card Ladder\u2026</span>';
         var url = BRIDGE_URL + "?key=" + encodeURIComponent(BRIDGE_KEY) + "&action=cert&cert=" + encodeURIComponent(cert);
         fetch(url).then(function (r) { return r.json(); }).then(function (res) {
           if (!res || res.success !== true || !res.found) {
-            host.innerHTML = '<span class="item-meta">No Card Ladder match for that cert.' + (res && res.error ? " (" + esc(String(res.error)).slice(0, 120) + ")" : "") + "</span>";
+            host.innerHTML = '<span class="item-meta">No match for that cert \u2014 double-check the number on the label.' + (res && res.error ? " (" + esc(String(res.error)).slice(0, 120) + ")" : "") + "</span>";
             return;
           }
-          var d = res.data || {};
-          var label = String(digKey(d, ["label", "name", "description", "card_name", "player"]) || "");
-          var clv = digKey(d, ["cl_value"]);
-          var lsp = digKey(d, ["last_sold_price"]);
-          var lsd = digKey(d, ["last_sold_date"]);
-          var pop = digKey(d, ["pop", "population"]);
-          var grade = String(digKey(d, ["grade"]) || "");
-          var setName = String(digKey(d, ["set", "set_name"]) || "");
-          var cleanName = label.replace(/\s+(PSA|BGS|SGC|CGC)\s+[\d.]+.*$/i, "").trim() || label;
-          lastScan = { name: cleanName, set: setName, grade: grade.replace(/[^0-9.]/g, ""), cert: cert, label: label };
-          host.innerHTML =
-            (label ? '<div style="font-weight:700;">' + esc(label) + "</div>" : "") +
-            '<div style="margin-top:6px;"><b>CL ' + money(clv === "" ? null : clv) + "</b>" +
-            (lsp !== "" ? ' <span class="item-meta">Last sold ' + money(lsp) + (lsd ? " · " + clDate(lsd) : "") + "</span>" : "") +
-            (pop !== "" ? '<div class="item-meta">Pop ' + esc(String(pop)) + "</div>" : "") +
-            "</div>" +
-            '<div style="margin-top:10px;"><button class="btn primary" id="btnScanAdd" type="button">Add to Slabs</button></div>';
-          var addBtn = document.getElementById("btnScanAdd");
-          if (addBtn) addBtn.addEventListener("click", function () {
-            if (!lastScan) return;
-            openItemForm("slabs", null);
-            $("#fName").value = lastScan.name || "";
-            if (lastScan.set) $("#fSet").value = lastScan.set;
-            if (lastScan.grade) $("#fGrade").value = lastScan.grade;
-            $("#fCert").value = lastScan.cert;
-            var g = (lastScan.label || "");
-            if (/pok[eé]mon/i.test(g)) $("#fGame").value = "Pokémon";
-            else if (/one piece/i.test(g)) $("#fGame").value = "One Piece";
-          });
-        }).catch(function () { host.innerHTML = '<span class="item-meta">Lookup failed — check your connection and try again.</span>'; });
+          var info = certInfo(res.data || {});
+          lastScan = { name: info.label, set: info.setName, grade: info.grade, cert: cert, label: info.label };
+          if (info.clv !== "") renderCertResult(host, info, cert, "");
+          else certValueFallback(host, info, cert);
+        }).catch(function () { host.innerHTML = '<span class="item-meta">Lookup failed \u2014 check your connection and try again.</span>'; });
       }
       $("#btnCert").addEventListener("click", doCertLookup);
       $("#certInput").addEventListener("keydown", function (e) { if (e.key === "Enter") doCertLookup(); });
@@ -1587,14 +1648,15 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                   if (res && res.success && res.found && res.data) {
-                    var d = res.data;
-                    var label = String(digKey(d, ["label", "name", "description", "card_name", "player"]) || "");
-                    var clv = digKey(d, ["cl_value"]);
-                    var lsp = digKey(d, ["last_sold_price"]);
-                    var lsd = digKey(d, ["last_sold_date"]);
-                    host.innerHTML = '<div style="margin-top:6px;"><b>CL ' + money(clv === "" ? null : clv) + "</b>" +
-                      (lsp !== "" ? ' <span class="item-meta">Last sold ' + money(lsp) + (lsd ? " · " + clDate(lsd) : "") + "</span>" : "") +
-                      (label ? '<div class="item-meta">' + esc(label) + "</div>" : "") + "</div>";
+                    var info = certInfo(res.data);
+                    if (info.clv !== "") {
+                      host.innerHTML = '<div style="margin-top:6px;"><b>CL ' + money(info.clv) + "</b>" +
+                        (info.lsp !== "" ? ' <span class="item-meta">Last sold ' + money(info.lsp) + (info.lsd ? " · " + clDate(info.lsd) : "") + "</span>" : "") +
+                        (info.label ? '<div class="item-meta">' + esc(info.label) + "</div>" : "") + "</div>";
+                    } else {
+                      host.innerHTML = '<div class="item-meta" style="margin-top:6px;">Card Ladder has no value tracked for this cert yet.' +
+                        (info.label ? " (" + esc(info.label) + (info.gradeLabel ? " · " + esc(info.gradeLabel) : "") + ")" : "") + "</div>";
+                    }
                   } else {
                     clFetch(it, cat, 0, host);
                   }
