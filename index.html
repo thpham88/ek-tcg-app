@@ -1457,7 +1457,7 @@
             '<div><label>Listing price</label><b>' + money(item.list) + "</b></div>" +
             margin +
           "</div>" +
-          '<div class="cl-result" id="cl-' + cat + "-" + item.id + '"></div>' +
+          '<div class="cl-result"></div>' +
           '<div class="item-actions">' +
             '<button class="btn small" type="button" data-cl="' + cat + ":" + item.id + '">Card Ladder</button>' +
             '<a class="sold-link" href="' + soldUrl(item, cat) + '" target="_blank" rel="noopener">Sold listings ↗</a>' +
@@ -1483,8 +1483,10 @@
         function push(q) { q = (q || "").trim(); if (q && out.indexOf(q) < 0) out.push(q); }
         push(clean);
         if (toks.length > 2) push(toks[0] + " " + toks[toks.length - 1]);
+        if (toks.length > 2 && !/s$/i.test(toks[0])) push(toks[0] + "s " + toks[toks.length - 1]);
+        if (toks.length > 1) push(toks[toks.length - 1]);
         if (toks.length > 1) push(toks[0]);
-        return out.slice(0, 3);
+        return out.slice(0, 4);
       }
       function clDate(s) {
         if (!s) return "";
@@ -1584,10 +1586,32 @@
             var parts = b.getAttribute("data-cl").split(":");
             var cat = parts[0], id = parseInt(parts[1], 10);
             var it = state[cat].filter(function (x) { return x.id === id; })[0];
-            var host = document.getElementById("cl-" + cat + "-" + id);
+            var card = b.closest ? b.closest("article") : null;
+            var host = card ? card.querySelector(".cl-result") : null;
             if (!it || !host) return;
             host.innerHTML = '<span class="item-meta">Checking Card Ladder…</span>';
-            clFetch(it, cat, 0, host);
+            var certNum = (cat === "slabs" && it.cert) ? String(it.cert).replace(/[^0-9]/g, "") : "";
+            if (certNum) {
+              fetch(BRIDGE_URL + "?key=" + encodeURIComponent(BRIDGE_KEY) + "&action=cert&cert=" + encodeURIComponent(certNum))
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                  if (res && res.success && res.found && res.data) {
+                    var d = res.data;
+                    var label = String(digKey(d, ["label", "name", "description", "card_name", "player"]) || "");
+                    var clv = digKey(d, ["cl_value"]);
+                    var lsp = digKey(d, ["last_sold_price"]);
+                    var lsd = digKey(d, ["last_sold_date"]);
+                    host.innerHTML = '<div style="margin-top:6px;"><b>CL ' + money(clv === "" ? null : clv) + "</b>" +
+                      (lsp !== "" ? ' <span class="item-meta">Last sold ' + money(lsp) + (lsd ? " · " + clDate(lsd) : "") + "</span>" : "") +
+                      (label ? '<div class="item-meta">' + esc(label) + "</div>" : "") + "</div>";
+                  } else {
+                    clFetch(it, cat, 0, host);
+                  }
+                })
+                .catch(function () { clFetch(it, cat, 0, host); });
+            } else {
+              clFetch(it, cat, 0, host);
+            }
           });
         });
         $$("[data-del]", root).forEach(function (b) {
