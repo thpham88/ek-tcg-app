@@ -797,6 +797,14 @@
       <section class="panel" id="panel-slabs" aria-label="Slabs">
         <h2 class="section-title">Slabs</h2>
         <p class="section-sub">Graded cards, with grader, grade, and cert number.</p>
+        <div class="card" style="margin-bottom:14px;">
+          <label for="certInput" style="display:block; font-weight:600; margin-bottom:8px;">Cert lookup — check Card Ladder, add to inventory</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input id="certInput" type="text" inputmode="numeric" autocomplete="off" placeholder="PSA cert # on the slab label" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid #c8d2de; font-size:1rem;" />
+            <button class="btn primary" id="btnCert" type="button">Look up</button>
+          </div>
+          <div id="certResult" style="margin-top:14px;"></div>
+        </div>
         <div class="toolbar" data-toolbar="slabs"></div>
         <div id="list-slabs"></div>
         <div class="tab-total" id="total-slabs"></div>
@@ -861,19 +869,6 @@
       </section>
 
       <p class="foot-note">EK TCG — Ethan &amp; Kevin's card board. Prices in USD. Comps: eBay last sold or Card Ladder — never PSA estimates. Powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a>.</p>
-      <!-- ============ SCAN ============ -->
-      <section class="panel" id="panel-scan" aria-label="Scan a slab by cert number">
-        <h2 class="section-title">Scan</h2>
-        <p class="section-sub">Type a PSA cert number — Card Ladder identifies the slab and its value.</p>
-        <div class="card">
-          <label for="certInput" style="display:block; font-weight:600; margin-bottom:8px;">PSA cert number</label>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <input id="certInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Cert # on the slab label" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid #c8d2de; font-size:1rem;" />
-            <button class="btn primary" id="btnCert" type="button">Look up</button>
-          </div>
-          <div id="certResult" style="margin-top:14px;"></div>
-        </div>
-      </section>
     </main>
 
     <!-- ============ Left drawer tabs ============ -->
@@ -907,10 +902,6 @@
         <button class="tab-btn" role="tab" data-tab="calculator" aria-selected="false" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8.5 6.5h7"/><circle cx="9" cy="11" r=".6" fill="currentColor"/><circle cx="12" cy="11" r=".6" fill="currentColor"/><circle cx="15" cy="11" r=".6" fill="currentColor"/><circle cx="9" cy="14.5" r=".6" fill="currentColor"/><circle cx="12" cy="14.5" r=".6" fill="currentColor"/><circle cx="15" cy="14.5" r=".6" fill="currentColor"/><circle cx="9" cy="18" r=".6" fill="currentColor"/><circle cx="12" cy="18" r=".6" fill="currentColor"/><circle cx="15" cy="18" r=".6" fill="currentColor"/></svg>
           Calculator
-        </button>
-        <button class="tab-btn" role="tab" data-tab="scan" aria-selected="false" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M3 12h18"/></svg>
-          Scan
         </button>
       </div>
     </nav>
