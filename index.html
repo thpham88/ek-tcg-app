@@ -861,6 +861,19 @@
       </section>
 
       <p class="foot-note">EK TCG — Ethan &amp; Kevin's card board. Prices in USD. Comps: eBay last sold or Card Ladder — never PSA estimates. Powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a>.</p>
+      <!-- ============ SCAN ============ -->
+      <section class="panel" id="panel-scan" aria-label="Scan a slab by cert number">
+        <h2 class="section-title">Scan</h2>
+        <p class="section-sub">Type a PSA cert number — Card Ladder identifies the slab and its value.</p>
+        <div class="card">
+          <label for="certInput" style="display:block; font-weight:600; margin-bottom:8px;">PSA cert number</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input id="certInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Cert # on the slab label" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid #c8d2de; font-size:1rem;" />
+            <button class="btn primary" id="btnCert" type="button">Look up</button>
+          </div>
+          <div id="certResult" style="margin-top:14px;"></div>
+        </div>
+      </section>
     </main>
 
     <!-- ============ Left drawer tabs ============ -->
@@ -894,6 +907,10 @@
         <button class="tab-btn" role="tab" data-tab="calculator" aria-selected="false" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8.5 6.5h7"/><circle cx="9" cy="11" r=".6" fill="currentColor"/><circle cx="12" cy="11" r=".6" fill="currentColor"/><circle cx="15" cy="11" r=".6" fill="currentColor"/><circle cx="9" cy="14.5" r=".6" fill="currentColor"/><circle cx="12" cy="14.5" r=".6" fill="currentColor"/><circle cx="15" cy="14.5" r=".6" fill="currentColor"/><circle cx="9" cy="18" r=".6" fill="currentColor"/><circle cx="12" cy="18" r=".6" fill="currentColor"/><circle cx="15" cy="18" r=".6" fill="currentColor"/></svg>
           Calculator
+        </button>
+        <button class="tab-btn" role="tab" data-tab="scan" aria-selected="false" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M3 12h18"/></svg>
+          Scan
         </button>
       </div>
     </nav>
@@ -1496,6 +1513,65 @@
           host.innerHTML = html;
         }).catch(function () { host.innerHTML = '<span class="item-meta">Card Ladder check failed — try again.</span>'; });
       }
+      /* ---------------- Cert scan (Card Ladder via bridge) ---------------- */
+      var lastScan = null;
+      function digKey(o, names, depth) {
+        if (!o || typeof o !== "object" || depth > 3) return "";
+        for (var i = 0; i < names.length; i++) {
+          if (o[names[i]] !== null && o[names[i]] !== undefined && o[names[i]] !== "") return o[names[i]];
+        }
+        for (var k in o) {
+          if (o[k] && typeof o[k] === "object" && !Array.isArray(o[k])) {
+            var v = digKey(o[k], names, depth + 1);
+            if (v !== "") return v;
+          }
+        }
+        return "";
+      }
+      function doCertLookup() {
+        var cert = ($("#certInput").value || "").replace(/[^0-9]/g, "");
+        var host = $("#certResult");
+        if (!cert) { host.innerHTML = '<span class="item-meta">Enter the cert number from the slab label first.</span>'; return; }
+        host.innerHTML = '<span class="item-meta">Checking Card Ladder…</span>';
+        var url = BRIDGE_URL + "?key=" + encodeURIComponent(BRIDGE_KEY) + "&action=cert&cert=" + encodeURIComponent(cert);
+        fetch(url).then(function (r) { return r.json(); }).then(function (res) {
+          if (!res || res.success !== true || !res.found) {
+            host.innerHTML = '<span class="item-meta">No Card Ladder match for that cert.' + (res && res.error ? " (" + esc(String(res.error)).slice(0, 120) + ")" : "") + "</span>";
+            return;
+          }
+          var d = res.data || {};
+          var label = String(digKey(d, ["label", "name", "description", "card_name", "player"]) || "");
+          var clv = digKey(d, ["cl_value"]);
+          var lsp = digKey(d, ["last_sold_price"]);
+          var lsd = digKey(d, ["last_sold_date"]);
+          var pop = digKey(d, ["pop", "population"]);
+          var grade = String(digKey(d, ["grade"]) || "");
+          var setName = String(digKey(d, ["set", "set_name"]) || "");
+          var cleanName = label.replace(/\s+(PSA|BGS|SGC|CGC)\s+[\d.]+.*$/i, "").trim() || label;
+          lastScan = { name: cleanName, set: setName, grade: grade.replace(/[^0-9.]/g, ""), cert: cert, label: label };
+          host.innerHTML =
+            (label ? '<div style="font-weight:700;">' + esc(label) + "</div>" : "") +
+            '<div style="margin-top:6px;"><b>CL ' + money(clv === "" ? null : clv) + "</b>" +
+            (lsp !== "" ? ' <span class="item-meta">Last sold ' + money(lsp) + (lsd ? " · " + clDate(lsd) : "") + "</span>" : "") +
+            (pop !== "" ? '<div class="item-meta">Pop ' + esc(String(pop)) + "</div>" : "") +
+            "</div>" +
+            '<div style="margin-top:10px;"><button class="btn primary" id="btnScanAdd" type="button">Add to Slabs</button></div>';
+          var addBtn = document.getElementById("btnScanAdd");
+          if (addBtn) addBtn.addEventListener("click", function () {
+            if (!lastScan) return;
+            openItemForm("slabs", null);
+            $("#fName").value = lastScan.name || "";
+            if (lastScan.set) $("#fSet").value = lastScan.set;
+            if (lastScan.grade) $("#fGrade").value = lastScan.grade;
+            $("#fCert").value = lastScan.cert;
+            var g = (lastScan.label || "");
+            if (/pok[eé]mon/i.test(g)) $("#fGame").value = "Pokémon";
+            else if (/one piece/i.test(g)) $("#fGame").value = "One Piece";
+          });
+        }).catch(function () { host.innerHTML = '<span class="item-meta">Lookup failed — check your connection and try again.</span>'; });
+      }
+      $("#btnCert").addEventListener("click", doCertLookup);
+      $("#certInput").addEventListener("keydown", function (e) { if (e.key === "Enter") doCertLookup(); });
       function bindItemButtons(root) {
         $$("[data-edit]", root).forEach(function (b) {
           b.addEventListener("click", function () {
