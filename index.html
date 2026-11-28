@@ -346,6 +346,8 @@
       .item-head { display: flex; gap: 10px; align-items: flex-start; }
       .item-name { font-weight: 700; font-size: 1.05rem; line-height: 1.25; }
       .item-meta { color: var(--ink-soft); font-size: .86rem; margin-top: 2px; }
+      .manga-val { margin-left: auto; flex: 0 0 auto; text-align: right; }
+      .manga-val b { font-variant-numeric: tabular-nums; }
       .qty-badge {
         margin-left: auto; flex: 0 0 auto; background: var(--surface-2);
         border: 1px solid var(--line); border-radius: 8px;
@@ -830,6 +832,14 @@
         <div class="tab-total" id="total-shows"></div>
       </section>
 
+      <!-- ============ MANGAS ============ -->
+      <section class="panel" id="panel-mangas" aria-label="Mangas">
+        <h2 class="section-title">Mangas</h2>
+        <p class="section-sub">Card Ladder manga value tracker from the shared Sheet — updated daily. Read-only here; the values live in the Sheet.</p>
+        <div id="list-mangas"></div>
+        <div class="tab-total" id="total-mangas"></div>
+      </section>
+
       <!-- ============ CALCULATOR ============ -->
       <section class="panel" id="panel-calculator" aria-label="Calculator">
         <h2 class="section-title">Calculator</h2>
@@ -898,6 +908,10 @@
         <button class="tab-btn" role="tab" data-tab="shows" aria-selected="false" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
           Shows <span class="count" data-count="shows"></span>
+        </button>
+        <button class="tab-btn" role="tab" data-tab="mangas" aria-selected="false" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Mangas <span class="count" data-count="mangas"></span>
         </button>
         <button class="tab-btn" role="tab" data-tab="calculator" aria-selected="false" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8.5 6.5h7"/><circle cx="9" cy="11" r=".6" fill="currentColor"/><circle cx="12" cy="11" r=".6" fill="currentColor"/><circle cx="15" cy="11" r=".6" fill="currentColor"/><circle cx="9" cy="14.5" r=".6" fill="currentColor"/><circle cx="12" cy="14.5" r=".6" fill="currentColor"/><circle cx="15" cy="14.5" r=".6" fill="currentColor"/><circle cx="9" cy="18" r=".6" fill="currentColor"/><circle cx="12" cy="18" r=".6" fill="currentColor"/><circle cx="15" cy="18" r=".6" fill="currentColor"/></svg>
@@ -1060,6 +1074,56 @@
               { label: "2024 Luffy dalas promo", amount: 450 }
             ]
           }
+        ],
+        mangas: [
+          { card: "Shanks", code: "OP01-120", printing: "Original", value: 1095.95, prev: 1095.95, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Ace", code: "OP02-013", printing: "Original", value: 1188.95, prev: 1188.95, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Sogeking", code: "OP03-122", printing: "Original", value: 654.04, prev: 654.04, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Sabo", code: "OP04-083", printing: "Original", value: 602.15, prev: 602.15, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Law", code: "OP05-069", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Kid", code: "OP05-074", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "OP05-119", printing: "Original", value: 5580.51, prev: 5580.51, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Zoro", code: "OP06-118", printing: "Original", value: 2110.85, prev: 2110.85, change: 0, changePct: 0, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Hancock", code: "OP07-051", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Rayleigh", code: "OP08-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Shanks", code: "OP09-004", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Buggy", code: "OP09-051", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Teach", code: "OP09-093", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Gol D. Roger", code: "OP09-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "OP09-119", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Law", code: "OP10-119", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "OP11-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Bonney", code: "OP12-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "OP13-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Ace", code: "OP13-119", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Sabo", code: "OP13-120", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Mihawk", code: "OP14-119", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Enel", code: "OP15-118", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Kuzan", code: "OP16-063", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Sakazuki", code: "OP16-065", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Borsalino", code: "OP16-073", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Newgate", code: "OP17-005", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Shanks", code: "OP17-022", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Kaido", code: "OP17-062", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "OP17-079", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Linlin", code: "OP17-112", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Nico Robin", code: "OP18-031", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Chopper", code: "EB01-006", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Luffy", code: "EB02-061", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Uta", code: "EB03-061", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Koby", code: "EB04-044", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Shirahoshi", code: "EB05-014", printing: "Original", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Nami", code: "OP01-016", printing: "PRB01 (new manga)", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Sanji", code: "OP06-119", printing: "PRB02 (new manga)", value: null, valueText: "No CL data", prev: null, change: null, changePct: null, direction: "\u2014", updated: "2026-11-27" },
+          { card: "Shanks", code: "OP01-120", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Ace", code: "OP02-013", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Sogeking", code: "OP03-122", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Sabo", code: "OP04-083", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Law", code: "OP05-069", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Kid", code: "OP05-074", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Luffy", code: "OP05-119", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Zoro", code: "OP06-118", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" },
+          { card: "Chopper", code: "EB01-006", printing: "PRB01 Reprint", value: null, valueText: "CL doesn't separate printing", prev: null, change: null, changePct: null, direction: "\u2014", updated: "" }
         ]
       };
       var uid = 100;
@@ -1260,6 +1324,25 @@
         if (!lines.length) lines.push(line("Sell", "", 0, "", "", 0, s.notes));
         return lines;
       }
+      /* Sheet Mangas row -> tracker entry. CL values that are
+         not numbers ("No CL data", "CL doesn't separate printing")
+         become a null value with the raw text kept for display. */
+      function sheetToManga(r) {
+        var rawVal = sheetStr(r["CL Value (Raw)"]).trim();
+        var m = {
+          card: sheetStr(r["Card"]),
+          code: sheetStr(r["Code"]),
+          printing: sheetStr(r["Printing"]),
+          value: sheetNumOrNull(r["CL Value (Raw)"]),
+          prev: sheetNumOrNull(r["Prev Value"]),
+          change: sheetNumOrNull(r["Change $"]),
+          changePct: sheetNumOrNull(r["Change %"]),
+          direction: sheetStr(r["Direction"]),
+          updated: sheetDate(r["Updated"])
+        };
+        if (m.value === null && rawVal) m.valueText = rawVal;
+        return m;
+      }
       function applySheetData(data) {
         if (Object.prototype.toString.call(data.raw) === "[object Array]") {
           state.raw = data.raw.map(function (r) { return sheetToItem(r, "raw"); });
@@ -1272,6 +1355,9 @@
         }
         if (Object.prototype.toString.call(data.shows) === "[object Array]") {
           state.shows = sheetToShows(data.shows);
+        }
+        if (Object.prototype.toString.call(data.mangas) === "[object Array]") {
+          state.mangas = data.mangas.map(function (r) { return sheetToManga(r); });
         }
       }
       var syncing = false;
@@ -1763,6 +1849,41 @@
           "<span>Sold <b>" + money(tSold) + "</b> · Bought <b>" + money(tBought) + "</b> · Fees <b>" + money(tFee) + "</b> · Net <b>" + moneySigned(showsNet()) + "</b></span>";
       }
 
+      /* ---------------- Mangas rendering (read-only) ---------------- */
+      function moneyFull(n) {
+        if (n === null || n === undefined || n === "" || isNaN(n)) return "\u2014";
+        return "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function renderMangas() {
+        var host = $("#list-mangas");
+        if (!state.mangas.length) {
+          host.innerHTML = '<div class="empty"><b>No manga data yet</b>The tracker fills in from the shared Sheet.</div>';
+        } else {
+          host.innerHTML = state.mangas.map(function (m) {
+            var valHtml, chgHtml = '<span class="item-meta">\u2014</span>';
+            if (m.value !== null && m.value !== undefined) {
+              valHtml = "<b>" + moneyFull(m.value) + "</b>";
+              if (m.changePct !== null && m.changePct !== undefined) {
+                if (m.changePct > 0) chgHtml = '<span class="pos">\u25b2 +' + m.changePct.toFixed(1) + "%</span>";
+                else if (m.changePct < 0) chgHtml = '<span class="neg">\u25bc \u2212' + Math.abs(m.changePct).toFixed(1) + "%</span>";
+                else chgHtml = '<span class="item-meta">\u2014 0.0%</span>';
+              }
+            } else {
+              valHtml = '<span class="item-meta">' + esc(m.valueText || "No CL data") + "</span>";
+            }
+            return '<article class="item"><div class="item-head"><div>' +
+              '<span class="item-name">' + esc(m.card) + " \u00b7 " + esc(m.code) + "</span>" +
+              (m.printing ? '<div class="item-meta" style="margin-top:5px;"><span class="cat-tag" style="background:#c9a7e8">' + esc(m.printing) + "</span></div>" : "") +
+              '</div><div class="manga-val">' + valHtml + "<div>" + chgHtml + "</div></div></div></article>";
+          }).join("");
+        }
+        var priced = state.mangas.filter(function (m) { return m.value !== null && m.value !== undefined; });
+        var total = priced.reduce(function (a, m) { return a + m.value; }, 0);
+        $("#total-mangas").innerHTML =
+          "<span>" + priced.length + " of " + state.mangas.length + " tracked with values</span>" +
+          "<span>Tracked total <b>" + moneyFull(total) + "</b></span>";
+      }
+
       /* ---------------- Pie + summary ---------------- */
       function polar(cx, cy, r, angleDeg) {
         var a = (angleDeg - 90) * Math.PI / 180;
@@ -1830,6 +1951,8 @@
         });
         var sc = document.querySelector('[data-count="shows"]');
         if (sc) sc.textContent = state.shows.length;
+        var mc = document.querySelector('[data-count="mangas"]');
+        if (mc) mc.textContent = state.mangas.filter(function (m) { return m.value !== null && m.value !== undefined; }).length;
         /* name suggestions: everything already on the board */
         var names = [];
         CATS.forEach(function (c) {
@@ -1840,7 +1963,7 @@
         }).join("");
       }
 
-      function renderAll() { renderSummary(); renderLists(); renderShows(); }
+      function renderAll() { renderSummary(); renderLists(); renderShows(); renderMangas(); }
 
       /* ---------------- Item form ---------------- */
       var formCat = "raw", formId = null;
