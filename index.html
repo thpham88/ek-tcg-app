@@ -348,6 +348,19 @@
       .item-meta { color: var(--ink-soft); font-size: .86rem; margin-top: 2px; }
       .manga-val { margin-left: auto; flex: 0 0 auto; text-align: right; }
       .manga-val b { font-variant-numeric: tabular-nums; }
+
+      /* ---------- Manga chart ---------- */
+      .manga-chart-title {
+        font-family: "Barlow Condensed", sans-serif; font-size: 1.05rem;
+        font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+        margin: 0 0 10px;
+      }
+      .manga-chart-svg { width: 100%; height: auto; display: block; }
+      .manga-chart-svg .bar { fill: var(--gold); }
+      .manga-chart-svg .bar:hover { opacity: .85; }
+      .manga-chart-lab { font-size: 11px; font-weight: 600; fill: var(--ink); }
+      .manga-chart-val { font-size: 11px; fill: var(--ink-soft); font-variant-numeric: tabular-nums; }
+      .manga-chart-empty { color: var(--ink-soft); font-size: .9rem; margin: 0; }
       .qty-badge {
         margin-left: auto; flex: 0 0 auto; background: var(--surface-2);
         border: 1px solid var(--line); border-radius: 8px;
@@ -836,6 +849,9 @@
       <section class="panel" id="panel-mangas" aria-label="Mangas">
         <h2 class="section-title">Mangas</h2>
         <p class="section-sub">Card Ladder manga value tracker from the shared Sheet — updated daily. Read-only here; the values live in the Sheet.</p>
+        <div class="card">
+          <div id="chart-mangas"></div>
+        </div>
         <div id="list-mangas"></div>
         <div class="tab-total" id="total-mangas"></div>
       </section>
@@ -1854,8 +1870,33 @@
         if (n === null || n === undefined || n === "" || isNaN(n)) return "\u2014";
         return "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
+      function renderMangaChart() {
+        var host = $("#chart-mangas");
+        if (!host) return;
+        var title = '<h3 class="manga-chart-title">Card Ladder value \u2014 priced mangas</h3>';
+        var rows = state.mangas
+          .filter(function (m) { return m.value !== null && m.value !== undefined && !isNaN(m.value); })
+          .slice()
+          .sort(function (a, b) { return b.value - a.value; });
+        if (!rows.length) {
+          host.innerHTML = title + '<p class="manga-chart-empty">No Card Ladder values yet</p>';
+          return;
+        }
+        var W = 360, pitch = 36, barArea = 288, max = rows[0].value;
+        var parts = rows.map(function (m, i) {
+          var y = i * pitch;
+          var w = max > 0 ? Math.max(2, m.value / max * barArea) : 2;
+          var label = esc(m.card) + " \u00b7 " + esc(m.code);
+          return '<text class="manga-chart-lab" x="0" y="' + (y + 11) + '">' + label + "</text>" +
+            '<rect class="bar" x="0" y="' + (y + 17) + '" width="' + w.toFixed(1) + '" height="11" rx="3"><title>' + label + ": " + moneyFull(m.value) + "</title></rect>" +
+            '<text class="manga-chart-val" x="' + (w + 6).toFixed(1) + '" y="' + (y + 26) + '">' + moneyFull(m.value) + "</text>";
+        });
+        host.innerHTML = title +
+          '<svg class="manga-chart-svg" viewBox="0 0 ' + W + " " + (rows.length * pitch + 2) + '" role="img" aria-label="Bar chart of priced manga Card Ladder values">' + parts.join("") + "</svg>";
+      }
       function renderMangas() {
         var host = $("#list-mangas");
+        renderMangaChart();
         if (!state.mangas.length) {
           host.innerHTML = '<div class="empty"><b>No manga data yet</b>The tracker fills in from the shared Sheet.</div>';
         } else {
